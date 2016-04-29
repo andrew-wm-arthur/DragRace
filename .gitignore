@@ -2,8 +2,8 @@
 title/*.npy
 body/*.npy
 tags/*.npy
-computed/*.npy
-views/*.npy
+
+fixed_width/*
 data/*
 
 # OS generated files #
