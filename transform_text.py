@@ -14,7 +14,6 @@ from gensim import corpora, models, matutils, utils
 from gensim.models import Doc2Vec
 from gensim.models.doc2vec import LabeledSentence
 
-
 class LabeledLineSentence(object):
     def __init__(self, doc_list, labels_list):
        self.labels_list = labels_list
@@ -22,6 +21,14 @@ class LabeledLineSentence(object):
     def __iter__(self):
         for idx, doc in enumerate(self.doc_list):
             yield LabeledSentence(words=doc,tags=[str(self.labels_list[idx])])
+    def to_array(self):
+        self.sentences = []
+        for idx,doc in enumerate(self.doc_list):
+            self.sentences.append(LabeledSentence)
+        return self.sentences
+    def permute(self):
+        shuffle(self.doc_list)
+        return self.doc_list
 
 
 def LSI_transform( feature_list, num_topics ):
@@ -37,17 +44,19 @@ def LSI_transform( feature_list, num_topics ):
         np.save( name+'/'+name+'_LSI.npy', 
                  np.transpose( matutils.corpus2dense(LSI[corpus_tfIdf], num_topics))
                )
+    
 
 
+    
     #using this tutorial: https://medium.com/@klintcho/doc2vec-tutorial-using-gensim-ab3ac03d3a1#.ymtcbtlk2
     #and this ref: https://linanqiu.github.io/2015/10/07/word2vec-sentiment/
 def doc2vec():
     postids = np.load("postids.npy")
     titles = np.load("title/title.npy")
-    #title_it = [(title,postid) for title,postid in zip(titles,postids)]
+    #title_it = [[title,[postid]] for title,postid in zip(titles,postids)]
     title_it = LabeledLineSentence(titles, postids)
+    title_it.permute()
     
-
     bodies = np.load("body/bodies.npy")
     body_it = LabeledLineSentence(bodies,postids)
 
@@ -61,7 +70,6 @@ def doc2vec():
 
     #need to shuffle every iteration somehow
     for epoch in range(10):
-        
         title_model.train(title_it)
         title_model.alpha -= .002 
         title_model.min_alpha = title_model.alpha
@@ -74,7 +82,6 @@ def doc2vec():
     body_model.save("body/doc2vec.body_model")
 
     return(title_model, body_model)
-
 
 def main():
     titleVocab = corpora.Dictionary.load("title/title_vocab.dict")
