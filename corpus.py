@@ -123,14 +123,13 @@ def main():
       tags,
       computed,
       views ) = feature_split(data)
-    print(tag_split(tags))
 
     np.save("title/title.npy", np.array(tokenize_words(title)))
     np.save("body/bodies.npy", np.array(tokenize_words(body)))
     np.save("tags/tags.npy", np.array(tag_split(tags)))
-    np.save("postids.npy", np.array(postid))
-    np.save("computed/computed.npy", np.array(computed))
-    np.save("views.npy", np.array(views))
+    np.save("fixed_width/postids.npy", np.array(postid))
+    np.save("fixed_width/computed.npy", np.array(computed))
+    np.save("fixed_width/views.npy", np.array(views))
 
     #make_BOW( title, body, tags )
 
