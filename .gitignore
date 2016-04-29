@@ -1,9 +1,10 @@
 
-title/*
-body/*
-tags/*
-computed/*
-views/*
+title/*.npy
+body/*.npy
+tags/*.npy
+computed/*.npy
+views/*.npy
+data/*
 
 # OS generated files #
 ######################
