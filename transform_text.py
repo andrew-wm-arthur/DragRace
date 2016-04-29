@@ -51,7 +51,7 @@ def LSI_transform( feature_list, num_topics ):
     #using this tutorial: https://medium.com/@klintcho/doc2vec-tutorial-using-gensim-ab3ac03d3a1#.ymtcbtlk2
     #and this ref: https://linanqiu.github.io/2015/10/07/word2vec-sentiment/
 def doc2vec():
-    postids = np.load("postids.npy")
+    postids = np.load("fixed_width/postids.npy")
     titles = np.load("title/title.npy")
     #title_it = [[title,[postid]] for title,postid in zip(titles,postids)]
     title_it = LabeledLineSentence(titles, postids)
