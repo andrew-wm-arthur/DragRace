@@ -1,0 +1,14 @@
+README
+
+	4/25/16:
+		because we're working on different copies of the database, we have some drift between the two
+		Luke should have completed both joins shortly, so we'll work off that database output.
+
+		I need to modify the second join (users with post-postHistory) to run it on my subset
+		I also need to run the queries to compute the features
+		-> Then I'll be able to write corpus.py and feature_join.py
+
+		Questions for Luke:
+			were both indices created before the double join? ( postHistory.postID and post.userId)
+			will the computing features run efficiently on the entire dataset?
+			

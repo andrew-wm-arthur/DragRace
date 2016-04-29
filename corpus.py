@@ -1,0 +1,140 @@
+#!/bin/python/
+
+'''
+    Processes the output of the sqlite3 db
+    splits the data into title, body, tags, and computed
+
+    Allow saving of transformed text
+
+    expected format of sql output:
+        PostId,Reputation, UserLifeDays, PostLifeDays, 
+        CodeSnippet, PostLength, URLCount, PostViewCount, 
+        Title, Body, Tags, Delimiter='@$R$@' 
+
+    @TODO
+    add generators to make memory independent 
+    
+'''
+
+import sys
+import numpy as np
+from gensim import corpora, models, matutils
+import nltk
+from nltk.tokenize import RegexpTokenizer
+from nltk.corpus import stopwords
+
+
+def read_data( file_name ):
+    with open( file_name, "r") as f:
+        return [ row.split("##C##") for row in f.read().split("@$R$@")[:-1] ]
+
+def feature_split(data, postid_ind = 0, ci=(1,7), views_ind=7, title_ind=8, body_ind=9, tags_ind=10):
+    '''
+        Seperate the four feature categories to be transformed/processed 
+        independently
+
+        Indexes within data[] of each feature category are params
+        'ci' for computed features indices
+
+        @BUG one of the computed features is missing in Andy's sample
+    '''
+    postid = [ row[postid_ind].strip() for row in data]
+    title = [ row[title_ind] for row in data]
+    body = [ row[body_ind] for row in data]
+    tags = [ row[tags_ind] for row in data]
+    # slice the computed features from each row and convert to floats
+    computed = [[ f.strip() for f in row[ ci[0]:ci[1] ]] for row in data ]
+    computed =   [  [ float(x) if x != '' else 0.0 for x in row ]
+                    for row in computed ]
+    views = [ row[views_ind] for row in data]
+
+    return (postid, title, body, tags, computed, views)
+
+
+def tokenize_words( text ):
+    regex_tokenizer = RegexpTokenizer('[A-Z]\w+|[a-z]\w+')
+    tokens = [regex_tokenizer.tokenize(row) for row in text]
+    # stopwords = nltk.corpus.stopwords.words('english')
+    stopwords = [ 'and', 'I', 'the', 'but' ]
+    tokens =  [[token for token in row if token not in stopwords] for row in tokens]
+    lowercase_tokens = [ [token.lower() for token in row] for row in tokens]
+    return lowercase_tokens
+
+def tokenize_sentences( text ):
+	#write out sentence function
+	#save original array of arrays as a flatten numpy array
+    return text
+
+
+def tag_split( tags ):
+    tags = [[ x.strip('<>') for x in row.split('><') ] for row in tags ]
+    return tags
+
+
+def make_BOW( title, body, tags ):
+    ''' 
+        Take each textual feature and create a GenSim
+        corpus and vocabulary from it. Serialize these
+        to disk for later use.
+
+        @BUG title, body, and tags are not in a consistent
+            order in the sql output right now.
+    '''
+    ''' title '''
+    title = tokenize_words( title )
+    title.save("title/title.npy")
+    titleVocab = corpora.Dictionary( title )
+    titleCorpus = [ titleVocab.doc2bow( p ) for p in title ]
+    titleVocab.save( "title/title_vocab.dict" )
+    corpora.MmCorpus.serialize( "title/title_word_corpus.mm", titleCorpus )
+    ''' body '''
+    body = tokenize_words( body )
+    bodyVocab = corpora.Dictionary( body )
+    bodyCorpus = [ bodyVocab.doc2bow( p ) for p in body ]
+    bodyVocab.save( "body/body_vocab.dict" )
+    corpora.MmCorpus.serialize( "body/body_word_corpus.mm", bodyCorpus )
+    ''' tags '''
+    tags = tag_split( tags )    # rows = [ tags in a document ]
+    tagsVocab = corpora.Dictionary( tags )
+    # use all the tags
+    allTagsCorpus = [ tagsVocab.doc2bow( p ) for p in tags ]
+    tagsVocab.save( "tags/tags_vocab.dict" )
+    corpora.MmCorpus.serialize( "tags/tags_word_corpus.mm", allTagsCorpus )
+    # prune the vocabulary to the most common 10,000 tags
+    tagsVocab.filter_extremes(0,1,keep_n = 10000)
+    prunedTagsCorpus = [ tagsVocab.doc2bow( p ) for p in tags ]
+    tagsVocab.save( "tags/prunedTags_vocab.dict" )
+    corpora.MmCorpus.serialize( "tags/prunedTags_word_corpus.mm", prunedTagsCorpus )
+    # creates a tag vector of len = 10,000 for each document
+    prunedTags_vecs = np.transpose( matutils.corpus2dense( prunedTagsCorpus, 10000 ) )
+    np.save("tags/prunedTags.npy", prunedTags_vecs )
+
+def main():
+
+    if( len(sys.argv) < 2 ):
+        print("\tpass the path of the data text file")
+        exit()
+    
+    data = read_data( sys.argv[1] )
+
+    ( postid,
+ 	  title,
+      body,
+      tags,
+      computed,
+      views ) = feature_split(data)
+    print(tag_split(tags))
+
+    np.save("title/title.npy", np.array(tokenize_words(title)))
+    np.save("body/bodies.npy", np.array(tokenize_words(body)))
+    np.save("tags/tags.npy", np.array(tag_split(tags)))
+    np.save("postids.npy", np.array(postid))
+    np.save("computed/computed.npy", np.array(computed))
+    np.save("views.npy", np.array(views))
+
+    #make_BOW( title, body, tags )
+
+
+
+if __name__ == '__main__':
+    main()
