@@ -28,14 +28,6 @@ def load_data( file_list ):
     computed = np.load(file_list[3])
     views = np.load(file_list[4])
 
-    print(len(title))
-    print(len(body))
-    print(len(tags))
-    print(len(computed))
-    print(len(views))
-
-    #error in call to np.hstack
-    #verify dimensionality of arrays
     return (np.hstack(( title,
                         body,
                         tags,
@@ -43,11 +35,8 @@ def load_data( file_list ):
                         views
             )
 
-
-
+#bug with current input params
 def regress( X, y, iterations = 10 ):
-
-    
     test1 = Ridge( alpha=100.0 ).fit(X,y)
     print(test1.score(X,y))
     print('\n')
@@ -74,7 +63,6 @@ def regress( X, y, iterations = 10 ):
 
 
 def main():
-
     if( len(sys.argv) != 6 ):
         print('\tpass the paths of the four feature files and the target:')
         print('\t\ttitle body tags computedFeatures views')

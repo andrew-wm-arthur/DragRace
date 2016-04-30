@@ -66,7 +66,7 @@ def doc2vec():
         body_model.alpha -= .002
         body_model.min_alpha = body_model.alpha
 
-	#num columns must match size of models
+	#num columns (second param) must match size of models
     title_vecs = np.zeros((len(titles), 100))
     body_vecs = np.zeros((len(bodies), 100))
     
@@ -75,7 +75,7 @@ def doc2vec():
         body_vecs[idx] = body_model.docvecs[idx]
 
     title_model.save("title/doc2vec.title_model")
-    np.save("title/title_vectors.npy", title_vecs)
+    np.save("title/title_vecs.npy", title_vecs)
     body_model.save("body/doc2vec.body_model")
     np.save("body/body_vecs.npy", body_vecs)
 

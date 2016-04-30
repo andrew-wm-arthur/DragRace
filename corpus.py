@@ -2,18 +2,14 @@
 
 '''
     Processes the output of the sqlite3 db
-    splits the data into title, body, tags, and computed
+    Splits the data into postid, computed, views, title, body, tags
 
-    Allow saving of transformed text
+    Allows saving of parsed, raw text to load/transform down-stream
 
-    expected format of sql output:
+    Expected format of sql output:
         PostId,Reputation, UserLifeDays, PostLifeDays, 
         CodeSnippet, PostLength, URLCount, PostViewCount, 
         Title, Body, Tags, Delimiter='@$R$@' 
-
-    @TODO
-    add generators to make memory independent 
-    
 '''
 
 import sys
@@ -55,21 +51,37 @@ def tokenize_words( text ):
     regex_tokenizer = RegexpTokenizer('[A-Z]\w+|[a-z]\w+')
     tokens = [regex_tokenizer.tokenize(row) for row in text]
     # stopwords = nltk.corpus.stopwords.words('english')
-    stopwords = [ 'and', 'I', 'the', 'but' ]
+    # removing 60 most common English words from corpus
+    # computing cluster wouldn't recognize stopwords
+    stopwords = ['the','be','to','of','and','a','in','that','have','I','it','for',
+                    'not','on','with','he','as','you','do','at','this','but','his',
+                    'by','from','they','we','say','her','she','or','an','will','my',
+                    'one','all','would','there','their','what','so','up','out','if',
+                    'about','who','get','which','go','me','when','make','can','like',
+                    'time','no','just','him','know','take']
     tokens =  [[token for token in row if token not in stopwords] for row in tokens]
     lowercase_tokens = [ [token.lower() for token in row] for row in tokens]
     return lowercase_tokens
-
-def tokenize_sentences( text ):
-	#write out sentence function
-	#save original array of arrays as a flatten numpy array
-    return text
-
 
 def tag_split( tags ):
     tags = [[ x.strip('<>') for x in row.split('><') ] for row in tags ]
     return tags
 
+def tag_prune(tags):
+    tags = tag_split( tags )    # rows = [ tags in a document ]
+    tagsVocab = corpora.Dictionary( tags )
+    # use all the tags
+    allTagsCorpus = [ tagsVocab.doc2bow( p ) for p in tags ]
+    tagsVocab.save( "tags/tags_vocab.dict" )
+    corpora.MmCorpus.serialize( "tags/tags_word_corpus.mm", allTagsCorpus )
+    # prune the vocabulary to the most common 10,000 tags
+    tagsVocab.filter_extremes(0,1,keep_n = 10000)
+    prunedTagsCorpus = [ tagsVocab.doc2bow( p ) for p in tags ]
+    tagsVocab.save( "tags/prunedTags_vocab.dict" )
+    corpora.MmCorpus.serialize( "tags/prunedTags_word_corpus.mm", prunedTagsCorpus )
+    # creates a tag vector of len = 10,000 for each document
+    prunedTags_vecs = np.transpose( matutils.corpus2dense( prunedTagsCorpus, 10000 ) )
+    np.save("tags/prunedTags.npy", prunedTags_vecs )
 
 def make_BOW( title, body, tags ):
     ''' 
@@ -124,16 +136,15 @@ def main():
       computed,
       views ) = feature_split(data)
 
+
+
     np.save("title/title.npy", np.array(tokenize_words(title)))
     np.save("body/bodies.npy", np.array(tokenize_words(body)))
-    np.save("tags/tags.npy", np.array(tag_split(tags)))
+    np.save("tags/tags.npy", np.array(tag_prune(tags)))
     np.save("fixed_width/postids.npy", np.array(postid))
     np.save("fixed_width/computed.npy", np.array(computed))
     np.save("fixed_width/views.npy", np.array(views))
-
     #make_BOW( title, body, tags )
-
-
 
 if __name__ == '__main__':
     main()
