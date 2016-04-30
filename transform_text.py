@@ -20,15 +20,7 @@ class LabeledLineSentence(object):
        self.doc_list = doc_list
     def __iter__(self):
         for idx, doc in enumerate(self.doc_list):
-            yield LabeledSentence(words=doc,tags=[str(self.labels_list[idx])])
-    def to_array(self):
-        self.sentences = []
-        for idx,doc in enumerate(self.doc_list):
-            self.sentences.append(LabeledSentence)
-        return self.sentences
-    def permute(self):
-        shuffle(self.doc_list)
-        return self.doc_list
+            yield LabeledSentence(doc,['PostID_%s' % (self.labels_list[idx])])
 
 
 def LSI_transform( feature_list, num_topics ):
@@ -46,40 +38,46 @@ def LSI_transform( feature_list, num_topics ):
                )
     
 
-
-    
     #using this tutorial: https://medium.com/@klintcho/doc2vec-tutorial-using-gensim-ab3ac03d3a1#.ymtcbtlk2
     #and this ref: https://linanqiu.github.io/2015/10/07/word2vec-sentiment/
 def doc2vec():
     postids = np.load("fixed_width/postids.npy")
+   
     titles = np.load("title/title.npy")
-    #title_it = [[title,[postid]] for title,postid in zip(titles,postids)]
     title_it = LabeledLineSentence(titles, postids)
-    title_it.permute()
-    
+
     bodies = np.load("body/bodies.npy")
     body_it = LabeledLineSentence(bodies,postids)
 
     #see param docs: http://radimrehurek.com/gensim/models/doc2vec.html
     #need to fine-tune on a larger sub-sample
-    title_model = Doc2Vec(size=100, window=10, min_count=1, alpha=.025, min_alpha=.025)
+    title_model = Doc2Vec(size=100, window=8, min_count=2, alpha=.025, min_alpha=.025)
     title_model.build_vocab(title_it)
 
-    body_model = Doc2Vec(size=100, window=10, min_count=1, alpha=.025, min_alpha=.025)
+    body_model = Doc2Vec(size=100, window=8, min_count=2, alpha=.025, min_alpha=.025)
     body_model.build_vocab(body_it)
 
-    #need to shuffle every iteration somehow
     for epoch in range(10):
         title_model.train(title_it)
         title_model.alpha -= .002 
         title_model.min_alpha = title_model.alpha
-
+        
         body_model.train(body_it)
         body_model.alpha -= .002
         body_model.min_alpha = body_model.alpha
 
+	#num columns must match size of models
+    title_vecs = np.zeros((len(titles), 100))
+    body_vecs = np.zeros((len(bodies), 100))
+    
+    for idx,postid in enumerate(postids):
+        title_vecs[idx] = title_model.docvecs[idx]
+        body_vecs[idx] = body_model.docvecs[idx]
+
     title_model.save("title/doc2vec.title_model")
+    np.save("title/title_vectors.npy", title_vecs)
     body_model.save("body/doc2vec.body_model")
+    np.save("body/body_vecs.npy", body_vecs)
 
     return(title_model, body_model)
 
@@ -102,16 +100,15 @@ def main():
 
 if __name__ == '__main__':
     title_model, body_model = doc2vec()
-    #print(body_model.most_similar(["overflow"]))
-    #print(body_model.most_similar(20088))
 
-
-
-
-
-
-
-
-
+    #inspect model performance
+    print(body_model.doesnt_match("trouble issue problem python".split()))
+    print(body_model.doesnt_match("html css compiler".split()))
+    print(body_model.most_similar("javascript"))
+    print(body_model.infer_vector("html test code problem".split()))
+    print(body_model.similarity('html','css'))
+    print(body_model.similarity('java','java'))
+    print(body_model.similarity('compiler','python'))
+    print(body_model.docvecs[0])
 
 
