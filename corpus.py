@@ -22,6 +22,8 @@ from nltk.corpus import stopwords
 
 def read_data( file_name ):
     with open( file_name, "r") as f:
+        #use this return statement on final data - changed row delimiter to sqlite standard
+        #return [ row.split("##C##") for row in f.read().split("0x1E")[:-1] ]
         return [ row.split("##C##") for row in f.read().split("@$R$@")[:-1] ]
 
 def feature_split(data, postid_ind = 0, ci=(1,7), views_ind=7, title_ind=8, body_ind=9, tags_ind=10):
@@ -38,10 +40,7 @@ def feature_split(data, postid_ind = 0, ci=(1,7), views_ind=7, title_ind=8, body
     title = [ row[title_ind] for row in data]
     body = [ row[body_ind] for row in data]
     tags = [ row[tags_ind] for row in data]
-    # slice the computed features from each row and convert to floats
     computed = [[ f.strip() for f in row[ ci[0]:ci[1] ]] for row in data ]
-    computed =   [  [ float(x) if x != '' else 0.0 for x in row ]
-                    for row in computed ]
     views = [ row[views_ind] for row in data]
 
     return (postid, title, body, tags, computed, views)
@@ -50,15 +49,16 @@ def feature_split(data, postid_ind = 0, ci=(1,7), views_ind=7, title_ind=8, body
 def tokenize_words( text ):
     regex_tokenizer = RegexpTokenizer('[A-Z]\w+|[a-z]\w+')
     tokens = [regex_tokenizer.tokenize(row) for row in text]
-    # stopwords = nltk.corpus.stopwords.words('english')
+    stopwords = nltk.corpus.stopwords.words('english')
+
     # removing 60 most common English words from corpus
     # computing cluster wouldn't recognize stopwords
-    stopwords = ['the','be','to','of','and','a','in','that','have','I','it','for',
-                    'not','on','with','he','as','you','do','at','this','but','his',
-                    'by','from','they','we','say','her','she','or','an','will','my',
-                    'one','all','would','there','their','what','so','up','out','if',
-                    'about','who','get','which','go','me','when','make','can','like',
-                    'time','no','just','him','know','take']
+    #stopwords = ['the','be','to','of','and','a','in','that','have','I','it','for',
+                    #'not','on','with','he','as','you','do','at','this','but','his',
+                    #'by','from','they','we','say','her','she','or','an','will','my',
+                    #'one','all','would','there','their','what','so','up','out','if',
+                    #'about','who','get','which','go','me','when','make','can','like',
+                    #'time','no','just','him','know','take']
     tokens =  [[token for token in row if token not in stopwords] for row in tokens]
     lowercase_tokens = [ [token.lower() for token in row] for row in tokens]
     return lowercase_tokens
@@ -68,7 +68,7 @@ def tag_split( tags ):
     return tags
 
 def tag_prune(tags):
-    tags = tag_split( tags )    # rows = [ tags in a document ]
+    tags = tag_split(tags)  
     tagsVocab = corpora.Dictionary( tags )
     # use all the tags
     allTagsCorpus = [ tagsVocab.doc2bow( p ) for p in tags ]
@@ -82,6 +82,7 @@ def tag_prune(tags):
     # creates a tag vector of len = 10,000 for each document
     prunedTags_vecs = np.transpose( matutils.corpus2dense( prunedTagsCorpus, 10000 ) )
     np.save("tags/prunedTags.npy", prunedTags_vecs )
+    return(prunedTags_vecs)
 
 def make_BOW( title, body, tags ):
     ''' 
@@ -136,14 +137,12 @@ def main():
       computed,
       views ) = feature_split(data)
 
-
-
     np.save("title/title.npy", np.array(tokenize_words(title)))
     np.save("body/bodies.npy", np.array(tokenize_words(body)))
     np.save("tags/tags.npy", np.array(tag_prune(tags)))
-    np.save("fixed_width/postids.npy", np.array(postid))
-    np.save("fixed_width/computed.npy", np.array(computed))
-    np.save("fixed_width/views.npy", np.array(views))
+    np.save("fixed_width/postids.npy", np.array(postid).astype(np.float))
+    np.save("fixed_width/computed.npy", np.array(computed).astype(np.float))
+    np.save("fixed_width/views.npy", np.array(views).astype(np.float))
     #make_BOW( title, body, tags )
 
 if __name__ == '__main__':

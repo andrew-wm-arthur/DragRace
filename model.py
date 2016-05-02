@@ -6,7 +6,7 @@
         Reputation
         UserLifeDays
         PostLifeDays
-        CodeSnippet
+        CodeSnippet (binary)
         PostLength
         URLCount
 '''
@@ -35,9 +35,8 @@ def load_data( file_list ):
                         views
             )
 
-#bug with current input params
 def regress( X, y, iterations = 10 ):
-    test1 = Ridge( alpha=100.0 ).fit(X,y)
+    test1 = Ridge( alpha=.1).fit(X,y)
     print(test1.score(X,y))
     print('\n')
 
@@ -50,7 +49,7 @@ def regress( X, y, iterations = 10 ):
           y_test 
         ) = cross_validation.train_test_split( X, y, random_state=randint(0,100))
 
-        model = Ridge( alpha=100.0 )
+        model = Ridge( alpha=200.0 )
         model.fit(X_train,y_train)
         linear_scores.append(model.score(X_test,y_test))
 
@@ -63,12 +62,14 @@ def regress( X, y, iterations = 10 ):
 
 
 def main():
-    if( len(sys.argv) != 6 ):
-        print('\tpass the paths of the four feature files and the target:')
-        print('\t\ttitle body tags computedFeatures views')
-        exit()
+    #if( len(sys.argv) != 6 ):
+        #print('\tpass the paths of the four feature files and the target:')
+        #print('\t\ttitle body tags computedFeatures views')
+        #exit()
 
-    (X,y) = load_data( sys.argv[1:] )
+    (X, y) = load_data(["title/title_vecs.npy", "body/body_vecs.npy", "tags/tags.npy",
+                "fixed_width/computed.npy", "fixed_width/views.npy"])
+    #(X,y) = load_data( sys.argv[1:] )
     regress( X, y )
 
 
