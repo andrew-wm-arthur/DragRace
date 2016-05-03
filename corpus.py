@@ -75,7 +75,7 @@ def tag_prune(tags):
     tagsVocab.save( "tags/tags_vocab.dict" )
     corpora.MmCorpus.serialize( "tags/tags_word_corpus.mm", allTagsCorpus )
     # prune the vocabulary to the most common 10,000 tags
-    tagsVocab.filter_extremes(0,1,keep_n = 5000)
+    tagsVocab.filter_extremes(0,1,keep_n = 10000)
     prunedTagsCorpus = [ tagsVocab.doc2bow( p ) for p in tags ]
     tagsVocab.save( "tags/prunedTags_vocab.dict" )
     corpora.MmCorpus.serialize( "tags/prunedTags_word_corpus.mm", prunedTagsCorpus )
@@ -143,6 +143,7 @@ def main():
     np.save("fixed_width/postids.npy", np.array(postid))
     np.save("fixed_width/computed.npy", np.array(computed).astype(np.float))
     np.save("fixed_width/views.npy", np.array(views).astype(np.float))
+    np.save("fixed_width/logviews.npy", np.log(np.array(views).astype(np.float)))
     #make_BOW( title, body, tags )
 
 if __name__ == '__main__':

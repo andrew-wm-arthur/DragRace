@@ -49,7 +49,7 @@ def regress( X, y, iterations = 10 ):
           y_test 
         ) = cross_validation.train_test_split( X, y, random_state=randint(0,100))
 
-        model = Ridge( alpha=200.0 )
+        model = Ridge( alpha=10.0 )
         model.fit(X_train,y_train)
         linear_scores.append(model.score(X_test,y_test))
 
@@ -65,11 +65,13 @@ def main():
         #print('\t\ttitle body tags computedFeatures views')
         #exit()
 
-    (X, y) = load_data(["title/title_vecs.npy", "body/body_vecs.npy", "tags/prunedTags.npy",
-                "fixed_width/computed.npy", "fixed_width/views.npy"])
+    (X, y) = load_data(["title/title_vecs.npy", 
+                        "body/body_vecs.npy", 
+                        "tags/prunedTags.npy",
+                        "fixed_width/computed.npy",
+                         "fixed_width/logviews.npy"])
     #(X,y) = load_data( sys.argv[1:] )
     regress( X, y )
-
 
 if __name__ == '__main__':
     main()
