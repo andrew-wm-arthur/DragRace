@@ -36,8 +36,8 @@ def load_data( file_list ):
             )
 
 def regress( X, y, iterations = 10 ):
-    test1 = Ridge( alpha=.1).fit(X,y)
-    print(test1.score(X,y))
+    ridge_model = Ridge( alpha=.1).fit(X,y)
+    print("within sample R^2: "+str(ridge_model.score(X,y)))
     print('\n')
 
     linear_scores = []
@@ -59,15 +59,13 @@ def regress( X, y, iterations = 10 ):
             str(np.std(linear_scores))
           )
 
-
-
 def main():
     #if( len(sys.argv) != 6 ):
         #print('\tpass the paths of the four feature files and the target:')
         #print('\t\ttitle body tags computedFeatures views')
         #exit()
 
-    (X, y) = load_data(["title/title_vecs.npy", "body/body_vecs.npy", "tags/tags.npy",
+    (X, y) = load_data(["title/title_vecs.npy", "body/body_vecs.npy", "tags/prunedTags.npy",
                 "fixed_width/computed.npy", "fixed_width/views.npy"])
     #(X,y) = load_data( sys.argv[1:] )
     regress( X, y )
