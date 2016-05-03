@@ -7,12 +7,13 @@
     Allows saving of parsed, raw text to load/transform down-stream
 
     Expected format of sql output:
-        PostId,Reputation, UserLifeDays, PostLifeDays, 
+        PostId, Reputation, UserLifeDays, PostLifeDays, 
         CodeSnippet, PostLength, URLCount, PostViewCount, 
         Title, Body, Tags, Delimiter='@$R$@' OR '0x1E'
 '''
 
 import sys
+import math
 import numpy as np
 from gensim import corpora, models, matutils
 import nltk
@@ -49,16 +50,16 @@ def feature_split(data, postid_ind = 0, ci=(1,7), views_ind=7, title_ind=8, body
 def tokenize_words( text ):
     regex_tokenizer = RegexpTokenizer('[A-Z]\w+|[a-z]\w+')
     tokens = [regex_tokenizer.tokenize(row) for row in text]
-    stopwords = nltk.corpus.stopwords.words('english')
+    # stopwords = nltk.corpus.stopwords.words('english')
 
     # removing 60 most common English words from corpus
     # computing cluster wouldn't recognize stopwords
-    #stopwords = ['the','be','to','of','and','a','in','that','have','I','it','for',
-                    #'not','on','with','he','as','you','do','at','this','but','his',
-                    #'by','from','they','we','say','her','she','or','an','will','my',
-                    #'one','all','would','there','their','what','so','up','out','if',
-                    #'about','who','get','which','go','me','when','make','can','like',
-                    #'time','no','just','him','know','take']
+    stopwords = ['the','be','to','of','and','a','in','that','have','I','it','for',
+                    'not','on','with','he','as','you','do','at','this','but','his',
+                    'by','from','they','we','say','her','she','or','an','will','my',
+                    'one','all','would','there','their','what','so','up','out','if',
+                    'about','who','get','which','go','me','when','make','can','like',
+                    'time','no','just','him','know','take']
     tokens =  [[token for token in row if token not in stopwords] for row in tokens]
     lowercase_tokens = [ [token.lower() for token in row] for row in tokens]
     return lowercase_tokens
@@ -137,12 +138,15 @@ def main():
       computed,
       views ) = feature_split(data)
 
+    logViews = np.array([ math.log(x) for x in views ])
+
     np.save("title/title.npy", np.array(tokenize_words(title)))
     np.save("body/bodies.npy", np.array(tokenize_words(body)))
     np.save("tags/tags.npy", np.array(tag_prune(tags)))
     np.save("fixed_width/postids.npy", np.array(postid))
     np.save("fixed_width/computed.npy", np.array(computed).astype(np.float))
     np.save("fixed_width/views.npy", np.array(views).astype(np.float))
+    np.dave("fixed_width/logViews.npy", np.array(logViews).astype(np.float))
     #make_BOW( title, body, tags )
 
 if __name__ == '__main__':
