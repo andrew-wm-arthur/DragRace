@@ -27,7 +27,8 @@ def read_data( file_name ):
         #return [ row.split("##C##") for row in f.read().split("0x1E")[:-1] ]
         return [ row.split("##C##") for row in f.read().split("@$R$@")[:-1] ]
 
-def feature_split(data, postid_ind = 0, ci=(1,7), views_ind=7, title_ind=8, body_ind=9, tags_ind=10):
+# def feature_split(data, postid_ind = 0, ci=(1,7), views_ind=7, title_ind=8, body_ind=9, tags_ind=10):
+def feature_split(data,  ci=(1,7), views_ind=0, title_ind=7, body_ind=8, tags_ind=9):
     '''
         Seperate the four feature categories to be transformed/processed 
         independently
@@ -37,7 +38,7 @@ def feature_split(data, postid_ind = 0, ci=(1,7), views_ind=7, title_ind=8, body
 
         @BUG one of the computed features is missing in Andy's sample
     '''
-    postid = [ row[postid_ind].strip() for row in data]
+    # postid = [ row[postid_ind].strip() for row in data]
     title = [ row[title_ind] for row in data]
     body = [ row[body_ind] for row in data]
     tags = [ row[tags_ind] for row in data]
@@ -76,7 +77,7 @@ def tag_prune(tags):
     tagsVocab.save( "tags/tags_vocab.dict" )
     corpora.MmCorpus.serialize( "tags/tags_word_corpus.mm", allTagsCorpus )
     # prune the vocabulary to the most common 10,000 tags
-    tagsVocab.filter_extremes(0,1,keep_n = 5000)
+    tagsVocab.filter_extremes(0,1,keep_n = 10000)
     prunedTagsCorpus = [ tagsVocab.doc2bow( p ) for p in tags ]
     tagsVocab.save( "tags/prunedTags_vocab.dict" )
     corpora.MmCorpus.serialize( "tags/prunedTags_word_corpus.mm", prunedTagsCorpus )

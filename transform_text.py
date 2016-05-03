@@ -110,8 +110,8 @@ def main():
 
 
 if __name__ == '__main__':
-    title_model, body_model = doc2vec(200, 200, 50)
-
+    title_model, body_model = doc2vec(10, 10, 50)
+    
     #inspect model performance
     '''
     print(body_model.doesnt_match("trouble issue problem python".split()))
