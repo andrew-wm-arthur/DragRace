@@ -138,7 +138,7 @@ def main():
       computed,
       views ) = feature_split(data)
 
-    logViews = np.array([ math.log(x) for x in views ])
+    logViews = np.array([ math.log(float(x)) for x in views ])
 
     np.save("title/title.npy", np.array(tokenize_words(title)))
     np.save("body/bodies.npy", np.array(tokenize_words(body)))
@@ -146,7 +146,7 @@ def main():
     np.save("fixed_width/postids.npy", np.array(postid))
     np.save("fixed_width/computed.npy", np.array(computed).astype(np.float))
     np.save("fixed_width/views.npy", np.array(views).astype(np.float))
-    np.dave("fixed_width/logViews.npy", np.array(logViews).astype(np.float))
+    np.save("fixed_width/logViews.npy", np.array(logViews).astype(np.float))
     #make_BOW( title, body, tags )
 
 if __name__ == '__main__':
